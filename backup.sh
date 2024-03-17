@@ -1,32 +1,38 @@
 #!/bin/bash
-##############################################################################################
-# Config FTP Backup ##########################################################################
-ftp_server="ftp.example.com"
-ftp_username="username"
-ftp_password="password"
-ftp_temp_dir=""
-##############################################################################################
-# Config mySQL Backup ########################################################################
-db_username="root"
+
+##################################################################################################
+# Whatever you don't want to use leave blank
+##################################################################################################
+# Config Local Backup ############################################################################
+local="" # Example "/home/$USER/backups/"
+##################################################################################################
+# Config Exterrnal Backup ########################################################################
+external="" # Example "/mnt/Storage/backups/"
+##################################################################################################
+# Config FTP Backup ##############################################################################
+ftp_server="" # Example "ftp.example.com"
+ftp_username=""
+ftp_password=""
+ftp_temp_dir="" # Example "/home/$USER/ftp_temp" Only needed if local and external are blank
+##################################################################################################
+# Config mySQL Backup ############################################################################
+db_username=""
 db_password=""
-##############################################################################################
-# Config Local Backup ########################################################################
-local="/home/$USER/backups/"
-##############################################################################################
-# Config Exterrnal Backup ####################################################################
-external="/media/$USER/backups/"
-##############################################################################################
-# Config Encryption ##########################################################################
-encryption="AES256"
-passphrase="_6b;XZ,M1<xf4cJr7\7}84wW"
-##############################################################################################
-# Decrypt File Example #######################################################################
+##################################################################################################
+# Config Encryption ##############################################################################
+encryption="" # Example "AES256" Get algorithm options by typing "gpg --version" in terminal
+passphrase=""  # Example "_6b;XZ,M1<xf4cJr7\7}84wW"
+##################################################################################################
+# Decrypt File Example ###########################################################################
 # echo <passphrase> | gpg --batch --yes --passphrase-fd 0 backup-2024-03-16_205036.tar.gz.gpg
-##############################################################################################
+##################################################################################################
+# Log Config #####################################################################################
+log="" # Example "/home/$USER/backups/log.txt"
+##################################################################################################
 
 date="$(date +%Y-%m-%d_%H%M%S)"
 
-output="backup-$date.tar.gz"
+output="backup-$date.tar"
 
 # Change Directory Depending on Options
 if [ -n "${local}" ] 
@@ -48,28 +54,46 @@ else
    echo "No Directory Available to Create Backups."
 
    exit 0
-fi
+fi 
 
 function backup_directories {
     # Backup Directories
     declare -A folders=(
-        ["folder1"]="folder1/"
-        ["www"]="var/www/html/"
+        ["scripts"]="home/dataspy/scripts/"
     );
 
-     # Create Directory Backups
+    # Create Directory Backups
     for key in ${!folders[@]}
     do
-        tar -C / -cf - "${folders[${key}]}" | gzip -9 > "${key}.tar.gz" 
+        if [ -n "$log" ] && [ -z "$passphrase" ] || [ -z "$encryption" ]
+        then
+            log_date="$(date +%Y-%m-%d)"
+
+            start=$(date +%s)
+
+            tar -C / -cf - "${folders[${key}]}" | gzip -9 > "${key}.tar.gz"
+
+            end=$(date +%s)
+
+            echo "$log_date - ${key}.tar.gz Took $(($end-$start)) seconds to compress" >> "$log"
+        elif  [ -n "$log" ] && [ -n "$passphrase" ] && [ -n "$encryption" ]
+        then
+            log_date="$(date +%Y-%m-%d)"
+
+            start=$(date +%s)
+
+            tar -C / -cf - "${folders[${key}]}" | gzip -9 | gpg -v --passphrase "$passphrase" -c --no-symkey-cache --cipher-algo "$encryption" --batch -o "${key}.tar.gz.gpg"
+
+            end=$(date +%s)
+
+            echo "$log_date - ${key}.tar.gz.gpg Took $(($end-$start)) seconds to compress and encrypt" >> "$log"
+        elif  [ -z "$log" ] && [ -n "$passphrase" ] && [ -n "$encryption" ]
+        then
+            tar -C / -cf - "${folders[${key}]}" | gzip -9 | gpg -v --passphrase "$passphrase" -c --no-symkey-cache --cipher-algo "$encryption" --batch -o "${key}.tar.gz.gpg"
+        else 
+            tar -C / -cf - "${folders[${key}]}" | gzip -9 > "${key}.tar.gz"
+        fi
     done
-
-    if [ -n $passwdfile ] && [ -n $encryption ]
-    then 
-        output=$output".gpg"
-
-        # Combine Compressed Directories into One Compressed File and Encrypt with GPG
-        tar -cz * | gpg --passphrase "$passphrase" -c --no-symkey-cache --cipher-algo "$encryption" --batch -o "$output"
-    fi
 }
 
 # Backup Databases Check
@@ -79,15 +103,40 @@ then
 
     # Backup Databases
     declare -a databases=(
-        'database1'
-        'database2'
-        'database3'
+        'poo'
     );
 
     # Create Database Backups
     for db in ${databases[@]}
     do
-        $mysqldump -u $db_username -p "--password=$db_password" "$db" > "db-$db.sql"
+        if [ -n "$log" ] && [ -z "$passphrase" ] || [ -z "$encryption" ]
+        then
+            log_date="$(date +%Y-%m-%d)"
+
+            start=$(date +%s)
+
+            $mysqldump -u $db_username -p "--password=$db_password" "$db" > "db-$db.sql"
+
+            end=$(date +%s)
+
+            echo "$log_date - db-$db.sql Took $(($end-$start)) seconds to extract" >> "$log"
+        elif  [ -n "$log" ] && [ -n "$passphrase" ] && [ -n "$encryption" ]
+        then
+            log_date="$(date +%Y-%m-%d)"
+
+            start=$(date +%s)
+
+            $mysqldump -u $db_username -p "--password=$db_password" "$db" | gpg -v --passphrase "$passphrase" -c --no-symkey-cache --cipher-algo "$encryption" --batch -o "db-$db.sql.gpg"
+
+            end=$(date +%s)
+
+            echo "$log_date - db-$db.sql.gpg Took $(($end-$start)) seconds to extract and encrypt" >> "$log"
+        elif  [ -z "$log" ] && [ -n "$passphrase" ] && [ -n "$encryption" ]
+        then
+            $mysqldump -u $db_username -p "--password=$db_password" "$db" | gpg -v --passphrase "$passphrase" -c --no-symkey-cache --cipher-algo "$encryption" --batch -o "db-$db.sql.gpg"
+        else
+            $mysqldump -u $db_username -p "--password=$db_password" "$db" > "db-$db.sql"
+        fi
     done
 fi
 
@@ -95,6 +144,10 @@ fi
 if [ -n "${local}" ]
 then
     backup_directories
+
+    echo -e "Backed up to Local Directory"
+else 
+    echo -e "Not Backed up to Local Directory"
 fi
 
 # Backup External Directories Check
@@ -102,12 +155,16 @@ if [ -n "${external}" ] && [ -n "${local}" ]
 then
     mkdir -p "${external}backup-${date}"
 
-    cp $output ${external}backup-${date}
+    cp * ${external}backup-${date}
+
+    echo -e "Backed up to External Directory"
 elif [ -n "${external}" ]
 then
     backup_directories
+
+    echo -e "Backed up to External Directory"
 else 
-   echo ""
+    echo -e "Not Backed up to External Directory"
 fi
 
 # Upload Compressed Encrypted File to FTP Server Check
@@ -115,15 +172,23 @@ if [ -n "${ftp_server}" ] && [ -z "${local}" ] && [ -z "${external}" ]
 then
     backup_directories
 
-    curl -T "$output" -u "$ftp_username:$ftp_password" "$ftp_server"
+    for file in *
+    do
+
+        curl -u "$ftp_username:$ftp_password" -T ${file} "$ftp_server"
+    done 
+
+    echo -e "Backed up to FTP Server"
 elif [ -n "${ftp_server}" ]
 then
-    curl -T "$output" -u "$ftp_username:$ftp_password" "$ftp_server"
+    curl -u "$ftp_username:$ftp_password" "$ftp_server" -Q "MKD /backup-${date}/"
+
+    for file in *
+    do
+        curl -u "$ftp_username:$ftp_password" -T ${file} "$ftp_server/backup-${date}/"
+    done 
+
+    echo -e "Backed up to FTP Server"
 else 
-    echo ""
+    echo -e "Not Backed up to FTP Server"
 fi
-
-# Delete All Files Except Compressed/Encrypted One
-shopt -s extglob
-
-rm !("$output")
