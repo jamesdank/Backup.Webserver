@@ -17,7 +17,9 @@ This bash script automates the backup process for multiple directories and MySQL
 
 ### Dependencies:
 > BASH SHELL
+
 > MySQL client for database backups.
+
 > FTP client for transferring backups to a remote server.
 
 ### Example: 
