@@ -54,7 +54,7 @@ function backup_directories {
     # Backup Directories
     declare -A folders=(
         ["folder1"]="folder1/"
-        ["www"]="var/www/html"
+        ["www"]="var/www/html/"
     );
 
      # Create Directory Backups
