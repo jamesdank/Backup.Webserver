@@ -37,7 +37,7 @@ date="$(date +%Y-%m-%d_%H%M%S)"
 output="backup-$date.tar"
 
 # Change Directory Depending on Options
-if [ -n "${local}" ] 
+if [ -n "$local" ] 
 then
     mkdir -p "${local}backup-${date}"
 
@@ -47,7 +47,7 @@ then
     mkdir -p "${external}backup-${date}"
 
     cd "${external}backup-${date}"
-elif [ -n "${ftp_temp_dir}" ] 
+elif [ -n "$ftp_temp_dir" ] 
 then
     mkdir -p "${ftp_temp_dir}backup-${date}"
 
@@ -101,7 +101,7 @@ function backup_directories {
 }
 
 # Backup Databases Check
-if [ -n "${db_username}" ]
+if [ -n "$db_username" ]
 then
     mysqldump=$(whereis mysqldump | sed 's|mysqldump: ||g')
 
@@ -147,7 +147,7 @@ then
 fi
 
 # Backup Local Directories Check
-if [ -n "${local}" ]
+if [ -n "$local" ]
 then
     backup_directories
 
@@ -164,7 +164,7 @@ then
     cp * ${external}backup-${date}
 
     echo -e "Backed up to External Directory"
-elif [ -n "${external}" ]
+elif [ -n "$external" ]
 then
     backup_directories
 
@@ -174,7 +174,7 @@ else
 fi
 
 # Upload Compressed Encrypted File to FTP Server Check
-if [ -n "${ftp_server}" ] && [ -z "${local}" ] && [ -z "${external}" ]
+if [ -n "$ftp_server" ] && [ -z "$local" ] && [ -z "$external" ]
 then
     backup_directories
 
@@ -186,7 +186,7 @@ then
     done 
 
     echo -e "Backed up to FTP Server"
-elif [ -n "${ftp_server}" ]
+elif [ -n "$ftp_server" ]
 then
     curl -u "$ftp_username:$ftp_password" "$ftp_server" -Q "MKD /backup-${date}/"
 
