@@ -1,22 +1,28 @@
 #!/bin/bash
-
-#####################################################################
-# Config FTP Backup #################################################
+##############################################################################################
+# Config FTP Backup ##########################################################################
 ftp_server="ftp.example.com"
 ftp_username="username"
 ftp_password="password"
 ftp_temp_dir=""
-#####################################################################
-# Config mySQL Backup ###############################################
+##############################################################################################
+# Config mySQL Backup ########################################################################
 db_username="root"
 db_password=""
-#####################################################################
-# Config Local Backup ###############################################
+##############################################################################################
+# Config Local Backup ########################################################################
 local="/home/$USER/backups/"
-#####################################################################
-# Config Exterrnal Backup ###########################################
-external="/media/$USER/backup/"
-#####################################################################
+##############################################################################################
+# Config Exterrnal Backup ####################################################################
+external="/media/$USER/backups/"
+##############################################################################################
+# Config Encryption ##########################################################################
+encryption="AES256"
+passphrase="_6b;XZ,M1<xf4cJr7\7}84wW"
+##############################################################################################
+# Decrypt File Example #######################################################################
+# echo <passphrase> | gpg --batch --yes --passphrase-fd 0 backup-2024-03-16_205036.tar.gz.gpg
+##############################################################################################
 
 date="$(date +%Y-%m-%d_%H%M%S)"
 
@@ -51,14 +57,19 @@ function backup_directories {
         ["www"]="var/www/html"
     );
 
-    # Create Directory Backups
+     # Create Directory Backups
     for key in ${!folders[@]}
     do
         tar -czf "${key}.tar.gz" -C / "${folders[${key}]}"
     done
 
-    # Combine Compressed Directories into One Compressed File and Encrypt with GPG
-    tar -cz * | gpg -c -o "$output"
+    if [ -n $passwdfile ] && [ -n $encryption ]
+    then 
+        output=$output".gpg"
+
+        # Combine Compressed Directories into One Compressed File and Encrypt with GPG
+        tar -cz * | gpg --passphrase "$passphrase" -c --no-symkey-cache --cipher-algo "$encryption" --batch  -o "$output"
+    fi
 }
 
 # Backup Databases Check
@@ -112,7 +123,7 @@ else
     echo ""
 fi
 
-# Delete All Files Except Encrypted One
+# Delete All Files Except Compressed/Encrypted One
 shopt -s extglob
 
 rm !("$output")
