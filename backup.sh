@@ -68,7 +68,7 @@ function backup_directories {
         output=$output".gpg"
 
         # Combine Compressed Directories into One Compressed File and Encrypt with GPG
-        tar -cz * | gpg --passphrase "$passphrase" -c --no-symkey-cache --cipher-algo "$encryption" --batch  -o "$output"
+        tar -cz * | gpg --passphrase "$passphrase" -c --no-symkey-cache --cipher-algo "$encryption" --batch -o "$output"
     fi
 }
 
