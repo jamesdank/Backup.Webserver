@@ -2,6 +2,8 @@
 
 ##################################################################################################
 # Whatever you don't want to use leave blank
+# There are 2 arrays you need to edit, 1 is for Directories, on line 63 and if you want to 
+# back up mySQL databases that array is on line 110
 ##################################################################################################
 # Config Local Backup ############################################################################
 local="" # Example "/home/$USER/backups/"
