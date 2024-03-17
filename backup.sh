@@ -26,7 +26,7 @@ passphrase="_6b;XZ,M1<xf4cJr7\7}84wW"
 
 date="$(date +%Y-%m-%d_%H%M%S)"
 
-output="backup-$date.tar.gz.gpg"
+output="backup-$date.tar.gz"
 
 # Change Directory Depending on Options
 if [ -n "${local}" ] 
