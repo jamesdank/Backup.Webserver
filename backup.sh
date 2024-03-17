@@ -60,7 +60,7 @@ function backup_directories {
      # Create Directory Backups
     for key in ${!folders[@]}
     do
-        tar -czf "${key}.tar.gz" -C / "${folders[${key}]}"
+        tar -C / -cf - "${folders[${key}]}" | gzip -9 > "${key}.tar.gz" 
     done
 
     if [ -n $passwdfile ] && [ -n $encryption ]
