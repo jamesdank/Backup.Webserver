@@ -59,7 +59,9 @@ fi
 function backup_directories {
     # Backup Directories
     declare -A folders=(
-        ["scripts"]="home/dataspy/scripts/"
+        ["folder1"]="folder1"
+        ["folder2"]="folder2"
+        ["folder3"]="folder3"
     );
 
     # Create Directory Backups
@@ -103,7 +105,9 @@ then
 
     # Backup Databases
     declare -a databases=(
-        'poo'
+        'database1'
+        'database2'
+        'database3'
     );
 
     # Create Database Backups
@@ -172,10 +176,11 @@ if [ -n "${ftp_server}" ] && [ -z "${local}" ] && [ -z "${external}" ]
 then
     backup_directories
 
+    curl -u "$ftp_username:$ftp_password" "$ftp_server" -Q "MKD /backup-${date}/"
+        
     for file in *
     do
-
-        curl -u "$ftp_username:$ftp_password" -T ${file} "$ftp_server"
+        curl -u "$ftp_username:$ftp_password" -T ${file} "$ftp_server/backup-${date}/"
     done 
 
     echo -e "Backed up to FTP Server"
