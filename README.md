@@ -12,8 +12,9 @@ This bash script automates the backup process for multiple directories and MySQL
 
 ### Usage: 
 1. Clone the repo or download the script.
-2. Configure the script by editing the varables to specify backup directories, MySQL credentials, local backup location, and FTP server details.
-3. Run the script manually or set up a cron job for automated backups.
+2. chmod +x backup.sh 
+3. Configure the script by editing the varables to specify backup directories, MySQL credentials, local backup location, and FTP server details.
+4. Run the script manually or set up a cron job for automated backups.
 
 ### Dependencies:
 > BASH SHELL
@@ -23,7 +24,7 @@ This bash script automates the backup process for multiple directories and MySQL
 > FTP client for transferring backups to a remote server.
 
 ### Example: 
-./backup.sh
+sudo ./backup.sh
 
 ### Disclaimer:
 >Ensure sensitive information like MySQL passwords and FTP credentials are stored securely and not exposed in the script itself.
