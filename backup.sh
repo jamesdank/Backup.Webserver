@@ -2,6 +2,8 @@
 
 ##################################################################################################
 # Whatever you don't want to use leave blank
+# There are 2 arrays you need to edit, 1 is for Directories, on line 63 and if you want to 
+# back up mySQL databases that array is on line 110
 ##################################################################################################
 # Config Local Backup ############################################################################
 local="" # Example "/home/$USER/backups/"
@@ -35,7 +37,7 @@ date="$(date +%Y-%m-%d_%H%M%S)"
 output="backup-$date.tar"
 
 # Change Directory Depending on Options
-if [ -n "${local}" ] 
+if [ -n "$local" ] 
 then
     mkdir -p "${local}backup-${date}"
 
@@ -45,7 +47,7 @@ then
     mkdir -p "${external}backup-${date}"
 
     cd "${external}backup-${date}"
-elif [ -n "${ftp_temp_dir}" ] 
+elif [ -n "$ftp_temp_dir" ] 
 then
     mkdir -p "${ftp_temp_dir}backup-${date}"
 
@@ -59,7 +61,9 @@ fi
 function backup_directories {
     # Backup Directories
     declare -A folders=(
-        ["scripts"]="home/dataspy/scripts/"
+        ["folder1"]="folder1"
+        ["folder2"]="folder2"
+        ["folder3"]="folder3"
     );
 
     # Create Directory Backups
@@ -97,13 +101,15 @@ function backup_directories {
 }
 
 # Backup Databases Check
-if [ -n "${db_username}" ]
+if [ -n "$db_username" ]
 then
     mysqldump=$(whereis mysqldump | sed 's|mysqldump: ||g')
 
     # Backup Databases
     declare -a databases=(
-        'poo'
+        'database1'
+        'database2'
+        'database3'
     );
 
     # Create Database Backups
@@ -141,7 +147,7 @@ then
 fi
 
 # Backup Local Directories Check
-if [ -n "${local}" ]
+if [ -n "$local" ]
 then
     backup_directories
 
@@ -158,7 +164,7 @@ then
     cp * ${external}backup-${date}
 
     echo -e "Backed up to External Directory"
-elif [ -n "${external}" ]
+elif [ -n "$external" ]
 then
     backup_directories
 
@@ -168,18 +174,19 @@ else
 fi
 
 # Upload Compressed Encrypted File to FTP Server Check
-if [ -n "${ftp_server}" ] && [ -z "${local}" ] && [ -z "${external}" ]
+if [ -n "$ftp_server" ] && [ -z "$local" ] && [ -z "$external" ]
 then
     backup_directories
 
+    curl -u "$ftp_username:$ftp_password" "$ftp_server" -Q "MKD /backup-${date}/"
+        
     for file in *
     do
-
-        curl -u "$ftp_username:$ftp_password" -T ${file} "$ftp_server"
+        curl -u "$ftp_username:$ftp_password" -T ${file} "$ftp_server/backup-${date}/"
     done 
 
     echo -e "Backed up to FTP Server"
-elif [ -n "${ftp_server}" ]
+elif [ -n "$ftp_server" ]
 then
     curl -u "$ftp_username:$ftp_password" "$ftp_server" -Q "MKD /backup-${date}/"
 
